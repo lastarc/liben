@@ -1,0 +1,23 @@
+{
+  "name": "dc-media-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bot": "node .",
+    "deploy-commands": "node deploy-commands.js",
+    "lint": "eslint .",
+    "start": "pnpm run deploy-commands && pnpm run bot"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.481.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "eslint": "^8.56.0"
+  }
+}
