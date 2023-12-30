@@ -55,9 +55,18 @@ module.exports = {
 			}
 
 			// get width and height
-			const res = '' + execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json ./tmp/tiktok/${hash}.mp4`);
-			console.log(res);
-			const { width, height } = JSON.parse(res).streams[0];
+			let width = 0, height = 0;
+			try {
+				const res = '' + execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json ./tmp/tiktok/${hash}.mp4`);
+				console.log(res);
+				const stream = JSON.parse(res).streams[0];
+				width = stream.width;
+				height = stream.height;
+			} catch (e) {
+				console.error(e);
+				await replyMsg.edit('No video found in URL');
+				return;
+			}
 
 			// upload the video
 			await S3.send(new PutObjectCommand({
