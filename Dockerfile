@@ -9,4 +9,6 @@ RUN apk add --no-cache ffmpeg yt-dlp
 COPY . /app
 WORKDIR /app
 
-CMD [ "pnpm", "start" ]
+RUN pnpm install
+
+CMD ["pnpm", "start"]
