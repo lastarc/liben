@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { ListObjectsV2Command, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { execSync } = require('child_process');
 const fs = require('node:fs');
 const S3 = require('../../s3');
@@ -20,8 +20,13 @@ module.exports = {
 		.setDescription('Displays an embedded TikTok video.')
 		.addStringOption(option => option.setName('url')
 			.setDescription('The TikTok video URL.')
-			.setRequired(true)), async execute(interaction) {
+			.setRequired(true))
+		.addBooleanOption(option => option.setName('force')
+			.setDescription('Re-download?')),
+	async execute(interaction) {
 		const videoUrl = interaction.options.getString('url');
+		const force = interaction.options.getBoolean('force') || false;
+		console.log({ videoUrl, force });
 
 		const replyMsg = await interaction.reply('Processing TikTok link...');
 
@@ -41,11 +46,19 @@ module.exports = {
 
 		console.log(data);
 
-		if (data.KeyCount === 0) {
+		if (data.KeyCount !== 0 && force) {
+			console.log('Existing video with `force`, deleting');
+			await S3.send(new DeleteObjectCommand({
+				Bucket: S3_BUCKET_NAME,
+				Key: data.Contents[0].Key,
+			}));
+		}
+
+		if (data.KeyCount === 0 || force) {
 			// download the video
 			execSync('mkdir -p tmp/tiktok');
 			try {
-				execSync(`yt-dlp -q -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -o ./tmp/tiktok/${hash}.mp4 ` + videoUrl, {
+				execSync(`yt-dlp -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -S vcodec:h264 -o ./tmp/tiktok/${hash}.mp4 ` + videoUrl, {
 					stdio: 'inherit',
 				});
 			} catch (e) {
@@ -57,7 +70,7 @@ module.exports = {
 			// get width and height
 			let width = 0, height = 0;
 			try {
-				const res = '' + execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json ./tmp/tiktok/${hash}.mp4`);
+				const res = execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height,codec_name -of json ./tmp/tiktok/${hash}.mp4`).toString();
 				console.log(res);
 				const stream = JSON.parse(res).streams[0];
 				width = stream.width;

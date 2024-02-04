@@ -59,7 +59,24 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-	const content = message.content;
+	let msgRef = null;
+
+	try {
+		msgRef = await message.fetchReference();
+	} catch (e) {
+		// do nothing
+	}
+
+	let content = message.content;
+	let force = null;
+
+	if (content.toLocaleLowerCase().trim() === 'liben redo' && msgRef) {
+		content = msgRef.content;
+		force = true;
+
+		message = msgRef;
+	}
+
 	const videoUrlMatch = content.match(/https:\/\/(?:m|www|vm)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video)\/|\?shareId=|&item_id=)(\d+))|\w+)/gim);
 
 	if (!videoUrlMatch) {
@@ -72,6 +89,7 @@ client.on(Events.MessageCreate, async message => {
 	client.emit(Events.InteractionCreate, {
 		isChatInputCommand: () => true, client: client, commandName: 'tiktok', options: {
 			getString: () => videoUrl,
+			getBoolean: () => force,
 		}, reply: message.reply.bind(message),
 	});
 });
