@@ -77,7 +77,7 @@ client.on(Events.MessageCreate, async message => {
 		message = msgRef;
 	}
 
-	const videoUrlMatch = content.match(/https:\/\/(?:m|www|vm)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video)\/|\?shareId=|&item_id=)(\d+))|\w+)/gim);
+	const videoUrlMatch = content.match(/https:\/\/(?:m|www|vm|vt)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video)\/|\?shareId=|&item_id=)(\d+))|\w+)/gim);
 
 	if (!videoUrlMatch) {
 		return;
