@@ -107,7 +107,7 @@ module.exports = {
 		}
 
 		console.log(vurl, vwidth, vheight);
-		const embeddableUrl = `${EMBED_PROXY_URL}/?src=${vurl}&width=${vwidth}&height=${vheight}`;
+		const embeddableUrl = `${EMBED_PROXY_URL}/?src=${encodeURIComponent(vurl)}&width=${vwidth}&height=${vheight}`;
 		await replyMsg.edit(`Done ${embeddableUrl}`);
 	},
 };
