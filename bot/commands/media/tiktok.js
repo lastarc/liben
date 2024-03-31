@@ -127,6 +127,6 @@ module.exports = {
 		} else {
 			embeddableUrl = `${EMBED_PROXY_URL}/?src=${encodeURIComponent(vurl)}&width=${vwidth}&height=${vheight}`;
 		}
-		await replyMsg.edit(`Done ${embeddableUrl}`);
+		await replyMsg.edit(`${embeddableUrl}`);
 	},
 };
