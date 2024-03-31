@@ -107,7 +107,26 @@ module.exports = {
 		}
 
 		console.log(vurl, vwidth, vheight);
-		const embeddableUrl = `${EMBED_PROXY_URL}/?src=${encodeURIComponent(vurl)}&width=${vwidth}&height=${vheight}`;
+		let embeddableUrl = '';
+
+		const v2Check = await fetch(`${EMBED_PROXY_URL}/v2/healthz`);
+		if (v2Check.ok) {
+			const v2Res = await fetch(`${EMBED_PROXY_URL}/v2/add`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					src: vurl,
+					width: vwidth,
+					height: vheight,
+				}),
+			});
+			const v2Json = await v2Res.json();
+			embeddableUrl = `${EMBED_PROXY_URL}/v2/~/${v2Json.slug}`;
+		} else {
+			embeddableUrl = `${EMBED_PROXY_URL}/?src=${encodeURIComponent(vurl)}&width=${vwidth}&height=${vheight}`;
+		}
 		await replyMsg.edit(`Done ${embeddableUrl}`);
 	},
 };
