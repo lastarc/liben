@@ -105,7 +105,7 @@ module.exports = {
 		}
 
 		console.log(vurl, vwidth, vheight);
-		const embeddableUrl = await EmbedProxyClient.add(vurl, vwidth, vheight);
+		const embeddableUrl = await EmbedProxyClient.add(vurl, parseInt(vwidth, 10), parseInt(vheight, 10));
 		await replyMsg.edit(`${embeddableUrl}`);
 	},
 };
