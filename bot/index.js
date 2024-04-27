@@ -77,21 +77,28 @@ client.on(Events.MessageCreate, async message => {
 		message = msgRef;
 	}
 
-	const videoUrlMatch = content.match(/https:\/\/(?:m|www|vm|vt)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video)\/|\?shareId=|&item_id=)(\d+))|\w+)/gim);
+	const tiktokVideoUrlMatch = content.match(/https:\/\/(?:m|www|vm|vt)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video)\/|\?shareId=|&item_id=)(\d+))|\w+)/gim);
 
-	if (!videoUrlMatch) {
+	const instagramVideoUrlMatch = content.match(/https:\/\/www\.instagram\.com\/reel\/[a-zA-Z0-9_-]+\/?/gim);
+
+	switch (true) {
+	case tiktokVideoUrlMatch !== null:
+		return client.emit(Events.InteractionCreate, {
+			isChatInputCommand: () => true, client: client, commandName: 'tiktok', options: {
+				getString: () => tiktokVideoUrlMatch[0],
+				getBoolean: () => force,
+			}, reply: message.reply.bind(message),
+		});
+	case instagramVideoUrlMatch !== null:
+		return client.emit(Events.InteractionCreate, {
+			isChatInputCommand: () => true, client: client, commandName: 'instagram', options: {
+				getString: () => instagramVideoUrlMatch[0],
+				getBoolean: () => force,
+			}, reply: message.reply.bind(message),
+		});
+	default:
 		return;
 	}
-
-	const videoUrl = videoUrlMatch[0];
-
-	// forward to tiktok command
-	client.emit(Events.InteractionCreate, {
-		isChatInputCommand: () => true, client: client, commandName: 'tiktok', options: {
-			getString: () => videoUrl,
-			getBoolean: () => force,
-		}, reply: message.reply.bind(message),
-	});
 });
 
 client.login(DISCORD_TOKEN);
