@@ -4,15 +4,13 @@ const { execSync } = require('child_process');
 const fs = require('node:fs');
 const S3 = require('../../s3');
 const crypto = require('crypto');
+const EmbedProxyClient = require('../../embed-proxy-client');
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 if (!S3_BUCKET_NAME) throw new Error('No bucket name provided');
 
 const S3_PUBLIC_BUCKET_URL = process.env.S3_PUBLIC_BUCKET_URL;
 if (!S3_PUBLIC_BUCKET_URL) throw new Error('No public bucket URL provided');
-
-const EMBED_PROXY_URL = process.env.EMBED_PROXY_URL;
-if (!EMBED_PROXY_URL) throw new Error('No embed proxy URL provided');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -107,26 +105,7 @@ module.exports = {
 		}
 
 		console.log(vurl, vwidth, vheight);
-		let embeddableUrl = '';
-
-		const v2Check = await fetch(`${EMBED_PROXY_URL}/v2/healthz`);
-		if (v2Check.ok) {
-			const v2Res = await fetch(`${EMBED_PROXY_URL}/v2/add`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					src: vurl,
-					width: vwidth,
-					height: vheight,
-				}),
-			});
-			const v2Json = await v2Res.json();
-			embeddableUrl = `${EMBED_PROXY_URL}/v2/~/${v2Json.slug}`;
-		} else {
-			embeddableUrl = `${EMBED_PROXY_URL}/?src=${encodeURIComponent(vurl)}&width=${vwidth}&height=${vheight}`;
-		}
+		const embeddableUrl = await EmbedProxyClient.add(vurl, vwidth, vheight);
 		await replyMsg.edit(`${embeddableUrl}`);
 	},
 };
