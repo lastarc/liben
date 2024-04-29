@@ -56,7 +56,7 @@ module.exports = {
 			// download the video
 			execSync('mkdir -p tmp/tiktok');
 			try {
-				execSync(`yt-dlp -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -S vcodec:h264 -o ./tmp/tiktok/${hash}.mp4 ` + videoUrl, {
+				execSync(`yt-dlp --cookies ./cookies.txt -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -S vcodec:h264 -o ./tmp/tiktok/${hash}.mp4 ` + videoUrl, {
 					stdio: 'inherit',
 				});
 			} catch (e) {
