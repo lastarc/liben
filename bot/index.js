@@ -2,6 +2,7 @@ const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const dotenv = require('dotenv');
 const path = require('node:path');
 const fs = require('node:fs');
+const { onCommandFail } = require('./blame');
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ client.on(Events.InteractionCreate, async interaction => {
 		} else {
 			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 		}
+		await onCommandFail(client, interaction.channelId);
 	}
 });
 
@@ -84,14 +86,14 @@ client.on(Events.MessageCreate, async message => {
 	switch (true) {
 	case tiktokVideoUrlMatch !== null:
 		return client.emit(Events.InteractionCreate, {
-			isChatInputCommand: () => true, client: client, commandName: 'tiktok', options: {
+			isChatInputCommand: () => true, client: client, channelId: message.channelId, commandName: 'tiktok', options: {
 				getString: () => tiktokVideoUrlMatch[0],
 				getBoolean: () => force,
 			}, reply: message.reply.bind(message),
 		});
 	case instagramVideoUrlMatch !== null:
 		return client.emit(Events.InteractionCreate, {
-			isChatInputCommand: () => true, client: client, commandName: 'instagram', options: {
+			isChatInputCommand: () => true, client: client, channelId: message.channelId, commandName: 'instagram', options: {
 				getString: () => instagramVideoUrlMatch[0],
 				getBoolean: () => force,
 			}, reply: message.reply.bind(message),

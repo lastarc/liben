@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const S3 = require('../../s3');
 const crypto = require('crypto');
 const EmbedProxyClient = require('../../embed-proxy-client');
+const { onCommandFail } = require('../../blame');
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 if (!S3_BUCKET_NAME) throw new Error('No bucket name provided');
@@ -62,6 +63,7 @@ module.exports = {
 			} catch (e) {
 				console.error(e);
 				await replyMsg.edit('Error downloading video');
+				await onCommandFail(interaction.client, interaction.channelId);
 				return;
 			}
 
