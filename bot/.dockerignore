@@ -5,3 +5,6 @@ tmp
 .env
 .git
 .gitignore
+
+/cookies.txt
+/config.json

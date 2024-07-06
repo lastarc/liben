@@ -6,6 +6,7 @@ const S3 = require('../../s3');
 const crypto = require('crypto');
 const EmbedProxyClient = require('../../embed-proxy-client');
 const { onCommandFail } = require('../../blame');
+const configStore = require('../../config-store');
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 if (!S3_BUCKET_NAME) throw new Error('No bucket name provided');
@@ -26,6 +27,11 @@ module.exports = {
 		const videoUrl = interaction.options.getString('url');
 		const force = interaction.options.getBoolean('force') || false;
 		console.log({ videoUrl, force });
+
+		if (configStore.getOr('tiktok.enabled', 'true') !== 'true') {
+			await interaction.reply('TikTok support is disabled');
+			return;
+		}
 
 		const replyMsg = await interaction.reply('Processing TikTok link...');
 

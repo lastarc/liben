@@ -12,6 +12,8 @@ RUN apk add --no-cache yt-dlp
 COPY . /app
 WORKDIR /app
 
+VOLUME /app/config.json
+
 RUN pnpm install
 
 CMD ["pnpm", "start"]
