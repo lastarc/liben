@@ -29,7 +29,6 @@ module.exports = {
 		console.log({ videoUrl, force });
 
 		if (configStore.getOr('tiktok.enabled', 'true') !== 'true') {
-			await interaction.reply('TikTok support is disabled');
 			return;
 		}
 
