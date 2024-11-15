@@ -29,7 +29,6 @@ module.exports = {
 		console.log({ videoUrl, force });
 
 		if (configStore.getOr('instagram.enabled', 'true') !== 'true') {
-			await interaction.reply('Instagram support is disabled');
 			return;
 		}
 
