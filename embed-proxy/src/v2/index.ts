@@ -68,7 +68,7 @@ v2.get('/~/:slug', async (c) => {
   <meta property="og:type" content="video.other">
   <meta property="og:url" content="${c.env.Host}/v2/~/${slug}">
   <meta property="og:title" content="${embed.data.title || ""}">
-  <meta property="og:image" content="${embed.data.thumbnail || "https://dummyimage.com/480x360/000000/fff&text=+"}">
+  <meta property="og:image" content="${embed.data.thumbnail || `https://dummyimage.com/${embed.data.width}x${embed.data.height}/000000/fff&text=+`}">
   <meta property="og:video" content="${embed.data.src}">
 </head>
 <body>
