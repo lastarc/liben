@@ -1,19 +1,19 @@
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 const v1 = new Hono();
 
-v1.get('/', async (c) => {
-  const src = c.req.query('src') || '';
-  const width = c.req.query('width') || '';
-  const height = c.req.query('height') || '';
-  const title = c.req.query('title') || '';
+v1.get("/", async (c) => {
+  const src = c.req.query("src") || "";
+  const width = c.req.query("width") || "";
+  const height = c.req.query("height") || "";
+  const title = c.req.query("title") || "";
   const img =
-    c.req.query('img') ||
+    c.req.query("img") ||
     `https://dummyimage.com/${width}x${height}/000000/fff&text=+`;
 
   return c.html(`
 <!DOCTYPE html>
-<html>  
+<html>
   <head>
     <meta property="og:type" content="video.other">
     <meta property="og:url" content="${src}">

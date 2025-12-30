@@ -7,9 +7,9 @@ in-app video preview.
 
 ### Prerequisites
 
-* Node.js (project was built using v18)
-* pnpm
-* Cloudflare account
+- Node.js (project was built using v18)
+- pnpm
+- Cloudflare account
 
 ### Steps
 
@@ -30,9 +30,9 @@ pnpm i
 
 1. Open and edit the followings
 
-  1.1. replace the Host value with the address the worker will be accessed on
+   1.1. replace the Host value with the address the worker will be accessed on
 
-  1.2. 
+   1.2.
 
 1. Deploy
 

@@ -1,4 +1,4 @@
-import { Context } from 'hono';
+import { Context } from "hono";
 
 export default function info(c: Context): Response {
   return c.text(
@@ -36,6 +36,6 @@ POST /v2/add
   "slug": "my-video-ffff"
 }
 
-  `.trim()
+  `.trim(),
   );
 }
