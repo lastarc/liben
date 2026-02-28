@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   type CacheType,
+  type ChatInputCommandInteraction,
   type Interaction,
 } from "discord.js";
 import crypto from "crypto";
@@ -9,44 +9,32 @@ import EmbedProxyClient from "../../embed-proxy-client";
 import configStore from "../../config-store";
 import { runMediaPipeline } from "../../lib/pipeline";
 
-export const matcher =
-  /https:\/\/www\.instagram\.com\/reel\/[a-zA-Z0-9_-]+\/?/gim;
-
 export default {
   data: new SlashCommandBuilder()
-    .setName("instagram")
-    .setDescription("Displays an embedded Instagram video.")
+    .setName("download")
+    .setDescription("Downloads and embeds a video from any supported URL.")
     .addStringOption((option) =>
-      option
-        .setName("url")
-        .setDescription("The Instagram video URL.")
-        .setRequired(true),
+      option.setName("url").setDescription("The video URL.").setRequired(true),
     )
     .addBooleanOption((option) =>
       option.setName("force").setDescription("Re-download?"),
     ),
   async execute(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
-    const videoUrlRaw = interaction.options.getString("url", true);
+
+    const isOwner = interaction.user.id === process.env.OWNER_ID;
+
+    if (!isOwner && configStore.getOr("download.enabled", "true") !== "true") {
+      await interaction.reply({
+        content: "This command is disabled.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const videoUrl = interaction.options.getString("url", true);
     const force = interaction.options.getBoolean("force") || false;
-    console.log({ videoUrlRaw, force });
-
-    const isOwner =
-      interaction instanceof ChatInputCommandInteraction &&
-      interaction.user.id === process.env.OWNER_ID;
-
-    if (!isOwner && configStore.getOr("instagram.enabled", "true") !== "true") {
-      return;
-    }
-
-    const match = videoUrlRaw.match(matcher);
-    const videoUrl = match?.[0];
-    if (!videoUrl) {
-      await interaction.reply("Invalid url");
-      return;
-    }
-
-    const replyMsg = await interaction.reply("Processing Instagram link...");
+    console.log({ videoUrl, force });
 
     const hash = crypto
       .createHash("sha256")
@@ -54,13 +42,15 @@ export default {
       .digest("hex")
       .slice(0, 16);
 
+    const replyMsg = await interaction.reply("Processing download...");
+
     const result = await runMediaPipeline({
-      platform: "instagram",
+      platform: "download",
       hash,
       videoUrl,
       force,
       replyMsg,
-      interaction,
+      interaction: interaction as ChatInputCommandInteraction<CacheType>,
     });
     if (!result) return;
 
