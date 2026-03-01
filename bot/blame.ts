@@ -1,4 +1,7 @@
 import type { ChatInputCommandInteraction, CacheType } from "discord.js";
+import { getLogger } from "./logger";
+
+const logger = getLogger(["bot"]);
 
 const ERROR_WEBHOOK = process.env.ERROR_WEBHOOK;
 
@@ -103,7 +106,7 @@ const onCommandFail = async (
       }),
     });
   } catch (webhookError) {
-    console.error("Failed to send error webhook:", webhookError);
+    logger.error("failed to send error webhook", { error: webhookError });
   }
 };
 

@@ -7,6 +7,9 @@ import {
 import path from "path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { getLogger } from "../logger";
+
+const logger = getLogger(["bot"]);
 
 const commands = new Collection<
   string,
@@ -32,9 +35,7 @@ for (const folder of commandFolders) {
     if ("data" in command && "execute" in command) {
       commands.set(command.data.name, command);
     } else {
-      console.log(
-        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`,
-      );
+      logger.warn("command file missing required properties", { filePath });
     }
   }
 }

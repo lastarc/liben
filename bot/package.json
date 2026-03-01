@@ -13,6 +13,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@logtape/file": "^2.0.4",
+    "@logtape/logtape": "^2.0.4",
+    "@logtape/pretty": "^2.0.4",
     "discord.js": "^14.21.0",
     "dotenv": "^16.6.1"
   },

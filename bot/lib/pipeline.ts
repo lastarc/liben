@@ -6,6 +6,7 @@ import type {
   InteractionResponse,
   Message,
 } from "discord.js";
+import type { Logger } from "@logtape/logtape";
 import S3 from "../s3";
 import { onCommandFail } from "../blame";
 
@@ -16,6 +17,7 @@ async function withRetry<T>(
   fn: () => T,
   maxAttempts = 3,
   delayMs = 3000,
+  onRetry?: (attempt: number) => void,
 ): Promise<T> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -24,6 +26,7 @@ async function withRetry<T>(
     } catch (e) {
       lastError = e;
       if (attempt < maxAttempts) {
+        onRetry?.(attempt);
         const jitteredDelay = delayMs + delayMs * 0.2 * Math.random();
         await sleep(jitteredDelay);
       }
@@ -39,18 +42,23 @@ export interface PipelineOptions {
   force: boolean;
   replyMsg: InteractionResponse | Message;
   interaction: ChatInputCommandInteraction<CacheType>;
+  log: Logger;
 }
 
 export async function runMediaPipeline(
   opts: PipelineOptions,
 ): Promise<{ vurl: string; vwidth: number; vheight: number } | null> {
-  const { platform, hash, videoUrl, force, replyMsg, interaction } = opts;
+  const { platform, hash, videoUrl, force, replyMsg, interaction, log } = opts;
 
   const data = await S3.list({ prefix: `${platform}/${hash}-` });
   const existing = data.contents?.at(0);
+  log.debug("s3 cache lookup: {hit}", {
+    prefix: `${platform}/${hash}-`,
+    hit: !!existing,
+  });
 
   if (existing && force) {
-    console.log("Existing video with `force`, deleting");
+    log.info("force-deleting cached video");
     await S3.delete(existing.key);
   }
 
@@ -59,14 +67,19 @@ export async function runMediaPipeline(
 
     let ytdlpLogs = "";
     try {
-      ytdlpLogs = await withRetry(() =>
-        execSync(
-          `yt-dlp --cookies ./cookies.txt -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -S vcodec:h264 -o ./tmp/${platform}/${hash}.mp4 ${videoUrl} 2>&1`,
-          { encoding: "utf-8" },
-        ),
+      ytdlpLogs = await withRetry(
+        () =>
+          execSync(
+            `yt-dlp --cookies ./cookies.txt -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best -S vcodec:h264 -o ./tmp/${platform}/${hash}.mp4 ${videoUrl} 2>&1`,
+            { encoding: "utf-8" },
+          ),
+        3,
+        3000,
+        (attempt) =>
+          log.warn("yt-dlp attempt {attempt} failed, retrying", { attempt }),
       );
     } catch (e) {
-      console.error(e);
+      log.error("yt-dlp failed: {error}", { error: e });
       const errorLogs =
         e instanceof Error && "stdout" in e
           ? (e as any).stdout + "\n" + (e as any).stderr
@@ -84,12 +97,12 @@ export async function runMediaPipeline(
         `ffprobe -v error -select_streams v:0 -show_entries stream=width,height,codec_name -of json ./tmp/${platform}/${hash}.mp4 2>&1`,
         { encoding: "utf-8" },
       );
-      console.log(ffprobeLogs);
+      log.debug("ffprobe output: {ffprobeLogs}", { ffprobeLogs });
       const stream = JSON.parse(ffprobeLogs).streams[0];
       width = stream.width;
       height = stream.height;
     } catch (e) {
-      console.error(e);
+      log.error("ffprobe failed: {error}", { error: e });
       const errorLogs =
         e instanceof Error && "stdout" in e
           ? (e as any).stdout + "\n" + (e as any).stderr
@@ -103,17 +116,16 @@ export async function runMediaPipeline(
       return null;
     }
 
-    await S3.write(
-      `${platform}/${hash}-${width}x${height}.mp4`,
-      file(`./tmp/${platform}/${hash}.mp4`),
-    );
+    const s3Key = `${platform}/${hash}-${width}x${height}.mp4`;
+    await S3.write(s3Key, file(`./tmp/${platform}/${hash}.mp4`));
     execSync(`rm -f ./tmp/${platform}/${hash}.mp4`);
+    log.info("uploaded to s3: {s3Key}", { s3Key });
 
-    const vurl = `${S3_PUBLIC_BUCKET_URL}/${platform}/${hash}-${width}x${height}.mp4`;
+    const vurl = `${S3_PUBLIC_BUCKET_URL}/${s3Key}`;
     return { vurl, vwidth: width, vheight: height };
   } else {
     const res = existing.key;
-    console.log(res);
+    log.debug("cache hit: {s3Key}", { s3Key: res });
 
     const match = res.match(new RegExp(`${platform}\\/.*-(\\d+)x(\\d+)\\.mp4`));
     if (!match || !match[1] || !match[2]) {

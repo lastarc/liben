@@ -8,6 +8,7 @@ import crypto from "crypto";
 import EmbedProxyClient from "../../embed-proxy-client";
 import configStore from "../../config-store";
 import { runMediaPipeline } from "../../lib/pipeline";
+import { getLogger } from "../../logger";
 
 export default {
   data: new SlashCommandBuilder()
@@ -22,9 +23,19 @@ export default {
   async execute(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
 
+    const log = getLogger(["bot", "command"]).with({
+      command: interaction.commandName,
+      userId: interaction.user.id,
+      user: interaction.user.tag,
+      guildId: interaction.guildId ?? "dm",
+      guild: interaction.guild?.name ?? "dm",
+      channelId: interaction.channelId,
+    });
+
     const isOwner = interaction.user.id === process.env.OWNER_ID;
 
     if (!isOwner && configStore.getOr("download.enabled", "true") !== "true") {
+      log.warn("command disabled, ignoring");
       await interaction.reply({
         content: "This command is disabled.",
         ephemeral: true,
@@ -32,9 +43,13 @@ export default {
       return;
     }
 
+    if (isOwner && configStore.getOr("download.enabled", "true") !== "true") {
+      log.info("owner bypass active");
+    }
+
     const videoUrl = interaction.options.getString("url", true);
     const force = interaction.options.getBoolean("force") || false;
-    console.log({ videoUrl, force });
+    log.info("command invoked", { videoUrl, force });
 
     const hash = crypto
       .createHash("sha256")
@@ -51,11 +66,12 @@ export default {
       force,
       replyMsg,
       interaction: interaction as ChatInputCommandInteraction<CacheType>,
+      log,
     });
     if (!result) return;
 
     const { vurl, vwidth, vheight } = result;
-    console.log(vurl, vwidth, vheight);
+    log.info("embed ready", { vurl, vwidth, vheight });
     const embeddableUrl = await EmbedProxyClient.add(vurl, vwidth, vheight);
     await replyMsg.edit(`${embeddableUrl}`);
   },

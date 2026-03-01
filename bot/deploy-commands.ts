@@ -1,8 +1,11 @@
 import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
+import { getLogger } from "./logger";
 import commands from "./commands";
 
 dotenv.config();
+
+const logger = getLogger(["bot"]);
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 if (!DISCORD_TOKEN) throw new Error("No discord token provided");
@@ -15,9 +18,7 @@ const commandsData = commands.map((command) => command.data.toJSON());
 
 (async () => {
   try {
-    console.log(
-      `Started refreshing ${commandsData.length} application (/) commands.`,
-    );
+    logger.info("refreshing commands", { count: commandsData.length });
 
     const data = (await rest.put(
       Routes.applicationCommands(DISCORD_CLIENT_ID),
@@ -26,10 +27,8 @@ const commandsData = commands.map((command) => command.data.toJSON());
       },
     )) as any;
 
-    console.log(
-      `Successfully reloaded ${data.length} application (/) commands.`,
-    );
+    logger.info("commands reloaded", { count: data.length });
   } catch (error) {
-    console.error(error);
+    logger.error("deploy failed", { error });
   }
 })();

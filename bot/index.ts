@@ -1,3 +1,4 @@
+import { getLogger } from "./logger";
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 import { onCommandFail } from "./blame";
@@ -8,16 +9,16 @@ import { matcher as tiktokUrlMatcher } from "./commands/media/tiktok";
 
 dotenv.config();
 
+const logger = getLogger(["bot"]);
+
 try {
   const data = await S3.list({
     maxKeys: 10,
   });
 
-  console.log(
-    `S3 List Objects successful: ${data.contents?.length} object(s) (capped at 10)`,
-  );
+  logger.info("S3 accessible", { objects: data.contents?.length ?? 0 });
 } catch (e) {
-  console.error("Failed to connect to S3", e);
+  logger.error("S3 connection failed", { error: e });
 }
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
@@ -32,24 +33,30 @@ const client = new Client({
 });
 
 client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  logger.info("bot ready", { tag: readyClient.user.tag });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  console.log(interaction.commandName);
 
-  const command = commands.get(interaction.commandName);
+  const commandName = interaction.commandName;
+  const u = interaction.user;
+  const guildId = interaction.guildId ?? "dm";
+  const guild = interaction.guild?.name ?? "dm";
+  const channelId = interaction.channelId;
+  logger.info("command received", { command: commandName, userId: u.id, user: u.tag, guildId, guild, channelId });
+
+  const command = commands.get(commandName);
 
   if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
+    logger.warn("unknown command", { command: commandName });
     return;
   }
 
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    logger.error("command execution failed", { error, command: commandName });
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: "There was an error while executing this command!",
@@ -90,6 +97,14 @@ client.on(Events.MessageCreate, async (message) => {
 
   switch (true) {
     case tiktokVideoUrlMatch !== null:
+      logger.info("auto-triggered from message", {
+        userId: message.author.id,
+        user: message.author.tag,
+        guildId: message.guildId ?? "dm",
+        channelId: message.channelId,
+        url: tiktokVideoUrlMatch[0],
+        platform: "tiktok",
+      });
       return client.emit(Events.InteractionCreate, {
         ...message,
         isChatInputCommand: () => true,
@@ -105,6 +120,14 @@ client.on(Events.MessageCreate, async (message) => {
         user: message.author,
       } as any);
     case instagramVideoUrlMatch !== null:
+      logger.info("auto-triggered from message", {
+        userId: message.author.id,
+        user: message.author.tag,
+        guildId: message.guildId ?? "dm",
+        channelId: message.channelId,
+        url: instagramVideoUrlMatch[0],
+        platform: "instagram",
+      });
       return client.emit(Events.InteractionCreate, {
         ...message,
         isChatInputCommand: () => true,
@@ -124,8 +147,8 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-process.on("SIGINT", async () => {
-  console.log("Exiting...");
+process.once("SIGINT", async () => {
+  logger.info("shutting down");
   client.destroy();
 });
 
