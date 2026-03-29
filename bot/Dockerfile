@@ -24,7 +24,7 @@ FROM base AS release
 RUN echo 'https://dl-cdn.alpinelinux.org/alpine/edge/main' > /etc/apk/repositories
 RUN echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories
 RUN apk update && apk upgrade
-RUN apk add --no-cache yt-dlp
+RUN apk add --no-cache yt-dlp ffmpeg
 
 RUN adduser -D liben
 USER liben
