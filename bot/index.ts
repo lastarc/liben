@@ -45,7 +45,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const guildId = interaction.guildId ?? "dm";
   const guild = interaction.guild?.name ?? "dm";
   const channelId = interaction.channelId;
-  logger.info("command received", { command: commandName, userId: u.id, user: u.tag, guildId, guild, channelId });
+  logger.info("command received", {
+    command: commandName,
+    userId: u.id,
+    user: u.tag,
+    guildId,
+    guild,
+    channelId,
+  });
 
   const command = commands.get(commandName);
 
