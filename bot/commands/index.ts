@@ -15,7 +15,6 @@ const commands = new Collection<
   string,
   {
     data: SlashCommandBuilder;
-    // eslint-disable-next-line no-unused-vars
     execute: (interaction: Interaction<CacheType>) => Promise<void>;
   }
 >();

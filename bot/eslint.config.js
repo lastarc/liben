@@ -23,6 +23,8 @@ export default [
     },
     rules: {
       // TypeScript-specific rules
+      // the base rule misreads parameter names in function type annotations
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
