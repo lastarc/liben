@@ -80,10 +80,8 @@ export async function runMediaPipeline(
       );
     } catch (e) {
       log.error("yt-dlp failed: {error}", { error: e });
-      const errorLogs =
-        e instanceof Error && "stdout" in e
-          ? (e as any).stdout + "\n" + (e as any).stderr
-          : ytdlpLogs;
+      // the command runs with `2>&1`, so stderr is already in stdout
+      const errorLogs = (e as { stdout?: string })?.stdout ?? ytdlpLogs;
       await replyMsg.edit("Error downloading video");
       await onCommandFail(interaction, e, errorLogs);
       return null;
@@ -103,10 +101,8 @@ export async function runMediaPipeline(
       height = stream.height;
     } catch (e) {
       log.error("ffprobe failed: {error}", { error: e });
-      const errorLogs =
-        e instanceof Error && "stdout" in e
-          ? (e as any).stdout + "\n" + (e as any).stderr
-          : ffprobeLogs;
+      // the command runs with `2>&1`, so stderr is already in stdout
+      const errorLogs = (e as { stdout?: string })?.stdout ?? ffprobeLogs;
       await replyMsg.edit("No video found in URL");
       await onCommandFail(
         interaction,

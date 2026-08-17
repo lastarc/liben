@@ -25,7 +25,7 @@ const commandsData = commands.map((command) => command.data.toJSON());
       {
         body: commandsData,
       },
-    )) as any;
+    )) as unknown[];
 
     logger.info("commands reloaded", { count: data.length });
   } catch (error) {

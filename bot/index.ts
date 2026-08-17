@@ -1,5 +1,6 @@
 import { getLogger } from "./logger";
 import { Client, Events, GatewayIntentBits } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import dotenv from "dotenv";
 import { onCommandFail } from "./blame";
 import commands from "./commands";
@@ -118,7 +119,7 @@ client.on(Events.MessageCreate, async (message) => {
         guild: message.guild,
         channel: message.channel,
         user: message.author,
-      } as any);
+      } as unknown as ChatInputCommandInteraction);
     case instagramVideoUrlMatch !== null:
       logger.info("auto-triggered from message", {
         userId: message.author.id,
@@ -141,7 +142,7 @@ client.on(Events.MessageCreate, async (message) => {
         guild: message.guild,
         channel: message.channel,
         user: message.author,
-      } as any);
+      } as unknown as ChatInputCommandInteraction);
     default:
       return;
   }

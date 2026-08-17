@@ -6,7 +6,7 @@
   "scripts": {
     "bot": "bun run .",
     "deploy-commands": "bun run deploy-commands.ts",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "start": "bun run deploy-commands && bun run bot"
   },

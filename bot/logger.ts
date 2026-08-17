@@ -3,10 +3,13 @@ import {
   getConsoleSink,
   getAnsiColorFormatter,
   jsonLinesFormatter,
+  isLogLevel,
   type TextFormatter,
 } from "@logtape/logtape";
 import { getTimeRotatingFileSink } from "@logtape/file";
 import { getPrettyFormatter } from "@logtape/pretty";
+
+const logLevel = process.env.LOG_LEVEL;
 
 const consoleFormatter: TextFormatter = (() => {
   switch (process.env.LOG_FORMAT) {
@@ -31,7 +34,7 @@ await configure({
   loggers: [
     {
       category: ["bot"],
-      lowestLevel: (process.env.LOG_LEVEL as any) ?? "debug",
+      lowestLevel: logLevel && isLogLevel(logLevel) ? logLevel : "debug",
       sinks: ["console", "file"],
     },
     {
