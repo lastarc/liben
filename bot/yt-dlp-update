@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# usage: yt-dlp-update [stable|nightly]
+
+set -eux
+
+spec="yt-dlp[default,curl-cffi]"
+
+case "${1:-${YT_DLP_CHANNEL:-stable}}" in
+  stable)  pipx install --force "$spec" ;;
+  nightly) pipx install --force --pip-args=--pre "$spec" ;;
+  *)       echo "usage: ${0##*/} [stable|nightly]" >&2; exit 2 ;;
+esac
+
+yt-dlp --version

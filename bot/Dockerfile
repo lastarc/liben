@@ -22,13 +22,15 @@ RUN bun run lint
 FROM base AS release
 
 RUN apk update && apk upgrade
-RUN apk add --no-cache yt-dlp deno pipx
+RUN apk add --no-cache ffmpeg deno pipx
+
+COPY --chmod=755 yt-dlp-update /usr/local/bin/yt-dlp-update
 
 RUN adduser -D liben
 USER liben
 
 ENV PATH="/home/liben/.local/bin:$PATH"
-RUN pipx install "yt-dlp[default]"
+RUN yt-dlp-update
 
 WORKDIR /app
 
